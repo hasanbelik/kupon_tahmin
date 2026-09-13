@@ -1,0 +1,40 @@
+name: Günün Kuponu - Günlük Güncelleme
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-coupon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repoyu indir
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bağımlılıkları kur
+        run: pip install -r requirements.txt
+
+      - name: Takım reytinglerini güncelle
+        run: python scripts/build_ratings.py
+
+      - name: Günün kuponunu oluştur
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: python scripts/fetch_coupon.py
+
+      - name: Sonuçları commit'le
+        run: |
+          git config user.name "futbol-kupon-bot"
+          git config user.email "actions@github.com"
+          git add data/ratings.json docs/coupon.json docs/ratings.json
+          git diff --quiet --cached || git commit -m "Günlük kupon güncellemesi $(date -u +'%Y-%m-%d')"
+          git push
