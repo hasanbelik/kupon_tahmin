@@ -1,8 +1,17 @@
 {
-  "generated_at": null,
+  "generated_at": "2026-09-13T17:07:16.127619+00:00",
+  "date_range": {
+    "from": "2026-09-13",
+    "to": "2026-09-19"
+  },
+  "leagues_covered": [
+    "Premier Lig (İngiltere)",
+    "La Liga (İspanya)",
+    "Serie A (İtalya)",
+    "Bundesliga (Almanya)",
+    "Ligue 1 (Fransa)"
+  ],
   "gunun_kuponu": [],
   "all_matches": [],
-  "skipped": [],
-  "leagues_covered": [],
-  "note": "Sistem henuz ilk kez calismadi. GitHub Actions sekmesinden 'Günün Kuponu - Günlük Güncelleme' workflow'unu elle tetikleyin."
+  "skipped": []
 }
