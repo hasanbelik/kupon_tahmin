@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Günün Kuponu — Kantitatif Futbol Tahmin Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1712; --surface:#16211a; --surface-2:#1c2921; --line:#2a3a2f;
+  --turf:#8fbf3f; --turf-dim:#5f7f34; --chalk:#eef0e6; --muted:#93a191;
+  --amber:#d9a441; --red:#c2554a; --blue:#6f9bc9;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:radial-gradient(1200px 600px at 15% -10%, #16261a 0%, transparent 60%), var(--bg);
+  color:var(--chalk); font-family:'IBM Plex Sans', sans-serif; line-height:1.45;
+  padding:28px 18px 60px;
+}
+.wrap{max-width:900px;margin:0 auto;}
+h1{font-family:'Oswald',sans-serif;font-weight:700;font-size:clamp(26px,5vw,38px);margin:0 0 4px;}
+.sub{color:var(--muted);font-size:14.5px;margin:0 0 22px;max-width:62ch;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:18px;}
+.card h2{font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;margin:0 0 14px;color:var(--turf);}
+.hero-btn{
+  width:100%;padding:20px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--turf),#6f9c2c);
+  color:#0e1712;font-family:'Oswald',sans-serif;font-weight:700;font-size:19px;letter-spacing:0.3px;
+  cursor:pointer;box-shadow:0 8px 24px rgba(143,191,63,0.25);
+}
+.hero-btn:hover{filter:brightness(1.06);}
+.hero-btn:disabled{opacity:0.6;cursor:wait;}
+.meta{font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px;}
+.coupon-item{
+  background:var(--surface-2);border:1px solid var(--turf-dim);border-radius:9px;
+  padding:14px 16px;margin-top:12px;
+}
+.coupon-item .match{font-family:'Oswald',sans-serif;font-size:15px;margin-bottom:2px;}
+.coupon-item .league{font-size:11.5px;color:var(--muted);margin-bottom:8px;}
+.coupon-item .row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.coupon-item .sel{font-weight:600;color:var(--turf);}
+.coupon-item .odd{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;}
+.coupon-item .ev{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);}
+.chip{background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.empty{color:var(--muted);font-size:13.5px;padding:20px 0;text-align:center;}
+.error{color:var(--red);font-size:13.5px;padding:14px 0;}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;padding:6px 6px;border-bottom:1px solid var(--line);}
+td{padding:7px 6px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+select,input{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--chalk);padding:9px 10px;border-radius:7px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;}
+.row2{display:flex;gap:10px;flex-wrap:wrap;}
+.field{flex:1;min-width:140px;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;}
+.vs{display:flex;align-items:center;justify-content:center;color:var(--muted);min-width:24px;padding-top:20px;}
+.probs{display:flex;gap:10px;margin-top:14px;}
+.probbar{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 8px;text-align:center;}
+.probbar .lbl{font-size:11.5px;color:var(--muted);margin-bottom:5px;}
+.probbar .val{font-family:'IBM Plex Mono',monospace;font-size:21px;font-weight:600;}
+.footnote{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.6;border-top:1px solid var(--line);padding-top:16px;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;}
+.tab{padding:8px 16px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:13.5px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+.tab.active{background:var(--surface-2);color:var(--chalk);border-color:var(--turf-dim);}
+.section{display:none;}
+.section.active{display:block;}
+.small-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;margin-right:4px;}
+.summary-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.summary-card{flex:1;min-width:100px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;}
+.summary-card .n{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;}
+.summary-card .l{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.btn{background:var(--turf);color:#0e1712;border:none;border-radius:7px;padding:10px 16px;font-weight:600;font-size:13.5px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Günün Kuponu</h1>
+  <p class="sub">Dixon–Coles kantitatif modeli + gerçek zamanlı bahis oranları. Her sabah otomatik güncellenir.</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="kupon">Günün Kuponu</button>
+    <button class="tab" data-tab="manuel">Manuel Karşılaştırma</button>
+    <button class="tab" data-tab="gunluk">Bahis Günlüğü</button>
+  </div>
+
+  <div class="section active" id="tab-kupon">
+    <div class="card">
+      <button class="hero-btn" id="refreshBtn">🎯 Günün Kuponunu Göster</button>
+      <div class="meta" id="metaInfo">Yükleniyor...</div>
+    </div>
+    <div id="couponResults"></div>
+    <div class="card" id="allMatchesCard" style="display:none;">
+      <h2>Bugün Değerlendirilen Tüm Maçlar</h2>
+      <div style="overflow-x:auto;">
+        <table id="allMatchesTable">
+          <thead><tr><th>Maç</th><th>Ev</th><th>Ber.</th><th>Dep.</th><th>Oranlar (1-X-2)</th></tr></thead>
+          <tbody id="allMatchesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="tab-manuel">
+    <div class="card">
+      <h2>İki Takım Karşılaştır</h2>
+      <div class="row2">
+        <div class="field"><label>Lig</label><select id="leagueSelect"></select></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="field"><label>Ev Sahibi</label><select id="homeSelect"></select></div>
+        <div class="vs">—</div>
+        <div class="field"><label>Deplasman</label><select id="awaySelect"></select></div>
+      </div>
+      <div class="probs" id="probsBox"></div>
+      <div class="stats-row" id="statsChips"></div>
+    </div>
+  </div>
+
+  <div class="section" id="tab-gunluk">
+    <div class="card">
+      <h2>Bahis Günlüğü</h2>
+      <p class="sub" style="margin:0 0 12px;">Günün kuponundan veya manuel karşılaştırmadan seçtiğiniz bahisleri buraya ekleyin.</p>
+      <div class="row2">
+        <div class="field"><label>Maç</label><input id="logMatch" placeholder="örn. Arsenal - Chelsea"></div>
+        <div class="field"><label>Seçim</label><input id="logSelection" placeholder="örn. Ev Sahibi"></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="field"><label>Oran</label><input type="number" step="0.01" id="logOdds"></div>
+        <div class="field"><label>Stake</label><input type="number" id="logStake"></div>
+      </div>
+      <div style="margin-top:12px;"><button class="btn" id="addLogBtn">Günlüğe Ekle</button></div>
+      <div class="summary-row" id="summaryRow"></div>
+      <div style="overflow-x:auto;margin-top:14px;">
+        <table id="logTable">
+          <thead><tr><th>Maç</th><th>Seçim</th><th>Oran</th><th>Stake</th><th>Durum</th><th>K/Z</th><th></th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+        <div class="empty" id="logEmpty" style="display:none;">Henüz bahis eklenmedi.</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    Bu sistem yatırım veya bahis tavsiyesi değildir; yalnızca istatistiksel olasılık tahmini sunar. "Değer (+EV)" etiketi, modelin hesapladığı olasılığın bahis şirketi oranının ima ettiği olasılıktan yüksek olduğunu gösterir — bu, kazanma garantisi değildir, sadece uzun vadeli matematiksel bir kenardır. Kaybetmeyi göze alamayacağınız parayla bahis oynamayın.
+  </p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('tab-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Günün Kuponu ----------
+async function loadCoupon() {
+  $('metaInfo').textContent = 'Yükleniyor...';
+  $('refreshBtn').disabled = true;
+  try {
+    const res = await fetch('coupon.json?t=' + Date.now());
+    const data = await res.json();
+    renderCoupon(data);
+  } catch (e) {
+    $('couponResults').innerHTML = '<div class="card error">Kupon verisi yüklenemedi. Sistem henüz ilk kez çalıştırılmamış olabilir — GitHub Actions sekmesinden "daily-coupon" workflow\'unu elle tetikleyin.</div>';
+    $('metaInfo').textContent = '';
+  }
+  $('refreshBtn').disabled = false;
+}
+
+function renderCoupon(data) {
+  if (data.error) {
+    $('couponResults').innerHTML = `<div class="card error">${data.error}</div>`;
+    $('metaInfo').textContent = '';
+    return;
+  }
+  const genDate = new Date(data.generated_at);
+  $('metaInfo').textContent = `Son güncelleme: ${genDate.toLocaleString('tr-TR')} · ${data.leagues_covered.length} lig tarandı`;
+
+  if (!data.gunun_kuponu || !data.gunun_kuponu.length) {
+    $('couponResults').innerHTML = '<div class="card empty">Bugün için %3 üzeri değerli (+EV) bahis bulunamadı. Bu normaldir — her gün "değer" çıkmaz, disiplin budur.</div>';
+  } else {
+    $('couponResults').innerHTML = '<div class="card"><h2>Bugünün Değerli Bahisleri</h2>' +
+      data.gunun_kuponu.map(b => `
+        <div class="coupon-item">
+          <div class="match">${b.home} – ${b.away}</div>
+          <div class="league">${b.league} · ${new Date(b.date).toLocaleString('tr-TR')}</div>
+          <div class="row">
+            <span class="sel">${b.label}</span>
+            <span class="odd">${b.odd.toFixed(2)}</span>
+          </div>
+          <div class="stats-row">
+            <span class="chip">Model: ${(b.model_prob*100).toFixed(1)}%</span>
+            <span class="chip">Oranın imalı: ${(b.implied_prob*100).toFixed(1)}%</span>
+            <span class="chip" style="color:var(--amber);border-color:var(--amber);">+EV: ${b.ev_pct}%</span>
+          </div>
+        </div>
+      `).join('') + '</div>';
+  }
+
+  if (data.all_matches && data.all_matches.length) {
+    $('allMatchesCard').style.display = 'block';
+    $('allMatchesBody').innerHTML = data.all_matches.map(m => `
+      <tr>
+        <td>${m.home} – ${m.away}<br><span style="color:var(--muted);font-size:10.5px;">${m.league}</span></td>
+        <td>${(m.prediction.p_home*100).toFixed(0)}%</td>
+        <td>${(m.prediction.p_draw*100).toFixed(0)}%</td>
+        <td>${(m.prediction.p_away*100).toFixed(0)}%</td>
+        <td>${m.odds ? `${m.odds.home} / ${m.odds.draw} / ${m.odds.away}` : '—'}</td>
+      </tr>
+    `).join('');
+  }
+}
+$('refreshBtn').addEventListener('click', loadCoupon);
+
+// ---------- Manuel karşılaştırma ----------
+let RATINGS = null;
+async function loadRatings() {
+  try {
+    const res = await fetch('ratings.json?t=' + Date.now());
+    RATINGS = await res.json();
+    const leagues = RATINGS.leagues;
+    const sel = $('leagueSelect');
+    Object.keys(leagues).forEach(k => sel.appendChild(new Option(leagues[k].label, k)));
+    populateTeams();
+  } catch (e) {
+    $('probsBox').innerHTML = '<div class="empty" style="width:100%;">Reyting verisi henüz yüklenmedi.</div>';
+  }
+}
+function populateTeams() {
+  const league = $('leagueSelect').value;
+  const teams = RATINGS.leagues[league].teams.slice().sort();
+  [$('homeSelect'), $('awaySelect')].forEach(s => s.innerHTML = '');
+  teams.forEach(t => { $('homeSelect').appendChild(new Option(t, t)); $('awaySelect').appendChild(new Option(t, t)); });
+  $('awaySelect').selectedIndex = Math.min(1, teams.length - 1);
+  renderManual();
+}
+function poissonPmf(k, l) { let lf = 0; for (let i = 2; i <= k; i++) lf += Math.log(i); return Math.exp(-l + k * Math.log(l) - lf); }
+function dcAdj(x, y, lam, mu, rho) {
+  if (x===0&&y===0) return 1-lam*mu*rho;
+  if (x===0&&y===1) return 1+lam*rho;
+  if (x===1&&y===0) return 1+mu*rho;
+  if (x===1&&y===1) return 1-rho;
+  return 1;
+}
+function renderManual() {
+  const league = $('leagueSelect').value;
+  const L = RATINGS.leagues[league];
+  const home = $('homeSelect').value, away = $('awaySelect').value;
+  if (!home || !away || home === away) { $('probsBox').innerHTML = '<div class="empty" style="width:100%;">Farklı takım seçin.</div>'; return; }
+  const lam = Math.exp(L.home_adv + L.attack[home] + L.defense[away]);
+  const mu = Math.exp(L.attack[away] + L.defense[home]);
+  let pHome=0,pDraw=0,pAway=0;
+  for (let h=0;h<=8;h++) for (let a=0;a<=8;a++) {
+    let p = poissonPmf(h,lam)*poissonPmf(a,mu);
+    if (h<2&&a<2) p*=dcAdj(h,a,lam,mu,L.rho);
+    if (h>a) pHome+=p; else if (h===a) pDraw+=p; else pAway+=p;
+  }
+  const tot = pHome+pDraw+pAway;
+  pHome/=tot; pDraw/=tot; pAway/=tot;
+  $('probsBox').innerHTML = `
+    <div class="probbar"><div class="lbl">${home}</div><div class="val" style="color:var(--turf)">${(pHome*100).toFixed(1)}%</div></div>
+    <div class="probbar"><div class="lbl">Beraberlik</div><div class="val">${(pDraw*100).toFixed(1)}%</div></div>
+    <div class="probbar"><div class="lbl">${away}</div><div class="val" style="color:var(--blue)">${(pAway*100).toFixed(1)}%</div></div>
+  `;
+  $('statsChips').innerHTML = `<span class="chip">xG: ${lam.toFixed(2)} – ${mu.toFixed(2)}</span><span class="chip">Reyting tarihi: ${L.as_of}</span>`;
+}
+$('leagueSelect').addEventListener('change', populateTeams);
+$('homeSelect').addEventListener('change', renderManual);
+$('awaySelect').addEventListener('change', renderManual);
+
+// ---------- Bahis günlüğü (localStorage - bu statik site icin uygun) ----------
+const LOG_KEY = 'futbol_bet_log_v1';
+let logBets = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+function saveLog() { localStorage.setItem(LOG_KEY, JSON.stringify(logBets)); }
+function renderLog() {
+  const body = $('logBody'), empty = $('logEmpty');
+  if (!logBets.length) { body.innerHTML=''; empty.style.display='block'; }
+  else {
+    empty.style.display='none';
+    body.innerHTML = logBets.slice().reverse().map((b,idx) => {
+      const real = logBets.length-1-idx;
+      let cells;
+      if (b.status==='open') cells = `<td style="color:var(--amber)">Açık</td><td>—</td><td>
+        <button class="small-btn" onclick="settleLog(${real},'won')">Kazandı</button>
+        <button class="small-btn" onclick="settleLog(${real},'lost')">Kaybetti</button></td>`;
+      else if (b.status==='won') { const pnl=(b.stake*b.odds-b.stake).toFixed(0); cells=`<td style="color:var(--turf)">Kazandı</td><td style="color:var(--turf)">+${pnl}</td><td><button class="small-btn" onclick="deleteLog(${real})">Sil</button></td>`; }
+      else { const pnl=(-b.stake).toFixed(0); cells=`<td style="color:var(--red)">Kaybetti</td><td style="color:var(--red)">${pnl}</td><td><button class="small-btn" onclick="deleteLog(${real})">Sil</button></td>`; }
+      return `<tr><td>${b.match}</td><td>${b.selection}</td><td>${b.odds.toFixed(2)}</td><td>${b.stake}</td>${cells}</tr>`;
+    }).join('');
+  }
+  const settled = logBets.filter(b=>b.status!=='open');
+  const won = settled.filter(b=>b.status==='won').length;
+  const staked = settled.reduce((s,b)=>s+b.stake,0);
+  const pnl = settled.reduce((s,b)=>s+(b.status==='won'?b.stake*b.odds-b.stake:-b.stake),0);
+  const roi = staked>0 ? (pnl/staked*100) : 0;
+  $('summaryRow').innerHTML = `
+    <div class="summary-card"><div class="n">${logBets.length}</div><div class="l">Toplam</div></div>
+    <div class="summary-card"><div class="n">${settled.length?((won/settled.length)*100).toFixed(0):0}%</div><div class="l">Kazanma</div></div>
+    <div class="summary-card"><div class="n" style="color:${pnl>=0?'var(--turf)':'var(--red)'}">${pnl>=0?'+':''}${pnl.toFixed(0)}</div><div class="l">Net K/Z</div></div>
+    <div class="summary-card"><div class="n" style="color:${roi>=0?'var(--turf)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(1)}%</div><div class="l">ROI</div></div>
+  `;
+}
+window.settleLog = (i,r) => { logBets[i].status=r; saveLog(); renderLog(); };
+window.deleteLog = (i) => { logBets.splice(i,1); saveLog(); renderLog(); };
+$('addLogBtn').addEventListener('click', () => {
+  const match=$('logMatch').value, selection=$('logSelection').value;
+  const odds=parseFloat($('logOdds').value), stake=parseFloat($('logStake').value);
+  if(!match||!selection||!odds||odds<=1||!stake||stake<=0){alert('Lütfen tüm alanları doldurun.');return;}
+  logBets.push({match,selection,odds,stake,status:'open',date:new Date().toISOString()});
+  saveLog(); renderLog();
+  $('logMatch').value=''; $('logSelection').value=''; $('logOdds').value=''; $('logStake').value='';
+});
+
+// ---------- init ----------
+loadCoupon();
+loadRatings();
+renderLog();
+</script>
+</body>
+</html>
